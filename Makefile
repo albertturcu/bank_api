@@ -1,4 +1,4 @@
-buid:
+build:
 	go build -o cmd/ cmd/main.go
 install:
 	go install
