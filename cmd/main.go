@@ -5,10 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"restAPI/pkg/domain"
-	"restAPI/pkg/http/rest/handler"
+	"restAPI/pkg/http/router"
+	"restAPI/pkg/interactor"
 	"restAPI/pkg/storage/mysql"
-	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -23,18 +22,16 @@ func init() {
 }
 
 func main() {
-	var wg sync.WaitGroup
 
-	s, err := mysql.NewRepositories()
+	s, err := mysql.NewConnection()
 	if err != nil {
 		panic(err)
 	}
 
-	u := domain.NewUserService(s)
-	a := domain.NewAccountService(s)
-	at := domain.NewAccountTypeService(s)
+	i := interactor.NewInteractor(s)
+	h := i.NewAppHandler()
 
-	r := handler.NewRouter(u, a, at, &wg)
+	r := router.NewRouter(h)
 
 	fmt.Printf("Server is running on port %s...\n", os.Getenv("APP_PORT"))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("APP_PORT"), r))
