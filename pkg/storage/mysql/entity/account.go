@@ -1,13 +1,13 @@
 package entity
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 //Account ...
 type Account struct {
 	gorm.Model
 	AccountNumber string `gorm:"unique"`
 	Balance       float32
-	UserID        uint `gorm:"not null"`
-	AccountTypeID int  `gorm:"not null;unique"`
-	AccountType   AccountType
+	UserID        uint
+	AccountTypeID int         `gorm:"not null;unique"`
+	AccountType   AccountType `gorm:"foreignKey:id;reference:account_type_id"`
 }

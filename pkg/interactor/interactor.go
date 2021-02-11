@@ -4,7 +4,7 @@ import (
 	"restAPI/pkg/http/handler"
 	"restAPI/pkg/storage/mysql/repository"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 //Interactor ...

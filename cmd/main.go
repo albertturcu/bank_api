@@ -9,8 +9,8 @@ import (
 	"restAPI/pkg/interactor"
 	"restAPI/pkg/storage/mysql"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	_ "gorm.io/driver/mysql"
 )
 
 func init() {

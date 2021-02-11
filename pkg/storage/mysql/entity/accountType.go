@@ -1,6 +1,6 @@
 package entity
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 //AccountType ...
 type AccountType struct {

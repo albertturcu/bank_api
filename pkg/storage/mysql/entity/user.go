@@ -1,6 +1,6 @@
 package entity
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 //User ...
 type User struct {
@@ -9,5 +9,5 @@ type User struct {
 	Email    string `gorm:"unique;not null"`
 	Phone    string
 	Address  string
-	Accounts []Account `gorm:"OnDelete:CASCADE"`
+	Accounts []Account `gorm:"foreignKey:user_id;reference:id"`
 }

@@ -3,7 +3,7 @@ package repository
 import (
 	"restAPI/pkg/storage/mysql/entity"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 //User ...

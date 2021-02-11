@@ -1,11 +1,13 @@
 package mysql
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"restAPI/pkg/storage/mysql/entity"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 //NewConnection ...
@@ -19,13 +21,25 @@ func NewConnection() (*gorm.DB, error) {
 		os.Getenv("APP_DB_NAME"),
 	)
 
-	db, err := gorm.Open(os.Getenv("APP_DB_DRIVER"), connectionString)
+	sqlDB, err := sql.Open("mysql", connectionString)
+	if err != nil {
+		fmt.Println(err)
+	}
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
+
 	if err != nil {
 		return nil, err
 	}
-	db.LogMode(true)
+	// db.LogMode(true)
 
 	db.AutoMigrate(&entity.User{}, &entity.AccountType{}, &entity.Account{})
+	// db.Model(&entity.User{}).AddForeignKey("id", "accounts(account_number)", "RESTRICT", "RESTRICT")
+	// var users []entity.User
+	// db.Preload(clause.Associations).Find(&users)
+	// fmt.Println(users[0])
+	// db.Model(&entity.Account{}).AddForeignKey("account_type_id", "accounts(id)", "RESTRICT", "RESTRICT")
 
 	return db, nil
 }

@@ -5,6 +5,6 @@ install:
 clean:
 	go clean
 test:
-	go test -V
+	go test ./...
 run:
 	go run cmd/main.go
