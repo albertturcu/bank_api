@@ -23,3 +23,7 @@ func (s *dService) UpdateUser(user entity.User) error {
 func (s *dService) DeleteUser(id string) error {
 	return s.r.DeleteUser(id)
 }
+
+func (s *dService) GetUserByEmail(email string) (entity.User, error) {
+	return s.r.GetUserByEmail(email)
+}

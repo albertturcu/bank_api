@@ -11,4 +11,5 @@ type User interface {
 	AddUser(user entity.User) (entity.User, error)
 	DeleteUser(id string) error
 	UpdateUser(user entity.User) error
+	GetUserByEmail(email string) (entity.User, error)
 }

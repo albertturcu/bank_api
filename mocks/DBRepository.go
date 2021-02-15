@@ -178,6 +178,27 @@ func (_m *DBRepository) GetUser(id string) (entity.User, error) {
 	return r0, r1
 }
 
+// GetUserByEmail provides a mock function with given fields: email
+func (_m *DBRepository) GetUserByEmail(email string) (entity.User, error) {
+	ret := _m.Called(email)
+
+	var r0 entity.User
+	if rf, ok := ret.Get(0).(func(string) entity.User); ok {
+		r0 = rf(email)
+	} else {
+		r0 = ret.Get(0).(entity.User)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUsers provides a mock function with given fields:
 func (_m *DBRepository) GetUsers() ([]entity.User, error) {
 	ret := _m.Called()

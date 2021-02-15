@@ -6,15 +6,14 @@ import (
 )
 
 //RespondWithError ...
-func RespondWithError(w http.ResponseWriter, code int, message error) {
-	RespondWithJSON(w, code, map[string]error{"error": message})
+func RespondWithError(rw http.ResponseWriter, code int, message error) {
+	RespondWithJSON(rw, code, map[string]error{"error": message})
 }
 
 //RespondWithJSON ...
-func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(rw http.ResponseWriter, code int, payload interface{}) {
+	rw.Header().Set("Content-Type", "application/json")
 	response, _ := json.Marshal(payload)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
+	rw.WriteHeader(code)
+	rw.Write(response)
 }

@@ -1,12 +1,25 @@
 package mysql
 
-import "restAPI/pkg/storage/mysql/entity"
+import (
+	"restAPI/pkg/storage/mysql/entity"
+)
 
 //GetUser ...
 func (s *dbRepository) GetUser(id string) (entity.User, error) {
 	user := entity.User{}
 	result := s.db.Preload("Accounts").Preload("Accounts.AccountType").Find(&user)
 
+	if result.Error != nil {
+		return user, result.Error
+	}
+	return user, nil
+}
+
+//GetUserByEmail ...
+func (s *dbRepository) GetUserByEmail(email string) (entity.User, error) {
+	user := entity.User{}
+
+	result := s.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		return user, result.Error
 	}

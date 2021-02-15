@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"restAPI/pkg/domain/authentication"
 	"restAPI/pkg/storage/mysql/entity"
-	"unsafe"
 
 	"github.com/gorilla/mux"
 )
@@ -18,6 +19,19 @@ type UserHandler interface {
 	GetUsers() func(w http.ResponseWriter, r *http.Request)
 	DeleteUser() func(w http.ResponseWriter, r *http.Request)
 	UpdateUser() func(w http.ResponseWriter, r *http.Request)
+	Login() func(w http.ResponseWriter, r *http.Request)
+}
+
+//LoginResponse ...
+type LoginResponse struct {
+	Email string `json:"Email"`
+	Token string `json:"Auth Bearer"`
+}
+
+//LoginPayload ...
+type LoginPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (h *appHandler) GetUser() func(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +60,8 @@ func (h *appHandler) GetUsers() func(w http.ResponseWriter, r *http.Request) {
 func (h *appHandler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user entity.User
-		fmt.Println(unsafe.Sizeof(user))
-		if json.NewDecoder(r.Body).Decode(&user) != nil {
-			RespondWithError(w, 404, errors.New("Bad request"))
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			RespondWithError(w, 404, err)
 			return
 		}
 		user, err := h.s.AddUser(user)
@@ -69,5 +82,49 @@ func (h *appHandler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 func (h *appHandler) UpdateUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Updating endpoint")
+	}
+}
+
+func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload LoginPayload
+
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			RespondWithError(w, 400, err)
+		}
+
+		expectedUser, err := h.s.GetUserByEmail(payload.Email)
+		valid := expectedUser.CheckPassword(payload.Password)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			RespondWithError(w, 400, errors.New("Email not found"))
+			return
+		}
+
+		if valid != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			RespondWithError(w, 400, errors.New("Incorrect Password"))
+			return
+		}
+
+		jwtWrapper := authentication.JwtWrapper{
+			SecretKey:       os.Getenv("SECRET_KEY"),
+			Issuer:          "AuthService",
+			ExpirationHours: 24,
+		}
+
+		signedToken, err := jwtWrapper.GenerateJWT(payload.Email)
+		if err != nil {
+			fmt.Println(err)
+			RespondWithError(w, 400, err)
+		}
+
+		loginRespone := LoginResponse{
+			Email: payload.Email,
+			Token: signedToken,
+		}
+		RespondWithJSON(w, 200, loginRespone)
 	}
 }
