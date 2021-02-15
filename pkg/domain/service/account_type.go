@@ -1,8 +1,6 @@
-package repository
+package service
 
-import (
-	"restAPI/pkg/storage/mysql/entity"
-)
+import "restAPI/pkg/storage/mysql/entity"
 
 //AccountType ...
 type AccountType interface {

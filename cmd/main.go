@@ -5,8 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"restAPI/pkg/domain"
+	"restAPI/pkg/http/handler"
 	"restAPI/pkg/http/router"
-	"restAPI/pkg/interactor"
 	"restAPI/pkg/storage/mysql"
 
 	"github.com/joho/godotenv"
@@ -23,14 +24,13 @@ func init() {
 
 func main() {
 
-	s, err := mysql.NewConnection()
+	mr, err := mysql.NewRepositories()
 	if err != nil {
 		panic(err)
 	}
 
-	i := interactor.NewInteractor(s)
-	h := i.NewAppHandler()
-
+	s := domain.NewService(mr)
+	h := handler.NewAppHandler(s)
 	r := router.NewRouter(h)
 
 	fmt.Printf("Server is running on port %s...\n", os.Getenv("APP_PORT"))

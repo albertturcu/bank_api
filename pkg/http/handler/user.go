@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"restAPI/pkg/domain"
 	"restAPI/pkg/storage/mysql/entity"
+	"unsafe"
 
 	"github.com/gorilla/mux"
 )
@@ -20,57 +20,53 @@ type UserHandler interface {
 	UpdateUser() func(w http.ResponseWriter, r *http.Request)
 }
 
-type userHandler struct {
-	UserService domain.UserService
-}
-
-//NewUserHandler ...
-func NewUserHandler(u domain.UserService) UserHandler {
-	return &userHandler{UserService: u}
-}
-
-func (h *userHandler) GetUser() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) GetUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		user, err := h.UserService.GetUser(id)
+		user, err := h.s.GetUser(id)
 		if err != nil {
 			RespondWithError(w, 404, errors.New("the requested user does not exist"))
+			return
 		}
 		RespondWithJSON(w, 200, user)
 	}
 }
 
-func (h *userHandler) GetUsers() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) GetUsers() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users, err := h.UserService.GetUsers()
+		users, err := h.s.GetUsers()
 		if err != nil {
 			RespondWithError(w, 400, err)
+			return
 		}
 		RespondWithJSON(w, 200, users)
 	}
 }
 
-func (h *userHandler) AddUser() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) AddUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var user entity.User
-
+		fmt.Println(unsafe.Sizeof(user))
 		if json.NewDecoder(r.Body).Decode(&user) != nil {
 			RespondWithError(w, 404, errors.New("Bad request"))
+			return
 		}
-		res := h.UserService.AddUser(user)
-		if res != nil {
-			RespondWithError(w, 404, res)
+		user, err := h.s.AddUser(user)
+		if err != nil {
+			RespondWithError(w, 404, err)
+			return
 		}
+		RespondWithJSON(w, 203, user)
 	}
 }
 
-func (h *userHandler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) DeleteUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Deleting endpoint")
 	}
 }
 
-func (h *userHandler) UpdateUser() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) UpdateUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Updating endpoint")
 	}

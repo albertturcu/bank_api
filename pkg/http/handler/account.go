@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"restAPI/pkg/domain"
 	"restAPI/pkg/storage/mysql/entity"
 
 	"github.com/gorilla/mux"
@@ -23,28 +22,19 @@ type AccountHandler interface {
 	CloseAccount() func(w http.ResponseWriter, r *http.Request)
 }
 
-type accountHandler struct {
-	AccountService domain.AccountService
-}
-
-//NewAccountHandler ...
-func NewAccountHandler(a domain.AccountService) AccountHandler {
-	return &accountHandler{AccountService: a}
-}
-
-func (h *accountHandler) GetAllAccounts() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) GetAllAccounts() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := h.AccountService.GetAllAccounts()
+		res := h.s.GetAllAccounts()
 
 		RespondWithJSON(w, 200, res)
 	}
 }
 
-func (h *accountHandler) CreateAccount() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) CreateAccount() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var account entity.Account
 		json.NewDecoder(r.Body).Decode(&account)
-		res, err := h.AccountService.CreateAccount(account)
+		res, err := h.s.CreateAccount(account)
 
 		if err != nil {
 			RespondWithError(w, 400, err)
@@ -54,11 +44,11 @@ func (h *accountHandler) CreateAccount() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *accountHandler) WithdrawMoney() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) WithdrawMoney() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var mr moneyRequest
 		json.NewDecoder(r.Body).Decode(&mr)
-		acc, err := h.AccountService.WithdrawMoney(mr.AccountNo, mr.Amount)
+		acc, err := h.s.WithdrawMoney(mr.AccountNo, mr.Amount)
 		if err != nil {
 			RespondWithError(w, 400, err)
 		}
@@ -66,11 +56,11 @@ func (h *accountHandler) WithdrawMoney() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *accountHandler) DepositMoney() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) DepositMoney() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var mr moneyRequest
 		json.NewDecoder(r.Body).Decode(&mr)
-		acc, err := h.AccountService.DepositMoney(mr.AccountNo, mr.Amount)
+		acc, err := h.s.DepositMoney(mr.AccountNo, mr.Amount)
 		if err != nil {
 			RespondWithError(w, 400, err)
 		}
@@ -78,10 +68,10 @@ func (h *accountHandler) DepositMoney() func(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (h *accountHandler) CloseAccount() func(w http.ResponseWriter, r *http.Request) {
+func (h *appHandler) CloseAccount() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountNo := mux.Vars(r)["accountNo"]
-		res := h.AccountService.CloseAccount(accountNo)
+		res := h.s.CloseAccount(accountNo)
 
 		if res != nil {
 			RespondWithError(w, 404, res)
