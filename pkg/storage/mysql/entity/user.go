@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"fmt"
 	"log"
 
 	"golang.org/x/crypto/bcrypt"
@@ -32,7 +31,6 @@ func (u *User) HashAndSalt(password string) string {
 //BeforeCreate ...
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	bytePassword := []byte(u.Password)
-	fmt.Println(u.Password)
 	hash, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.MinCost)
 	if err != nil {
 		return err
