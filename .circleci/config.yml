@@ -1,5 +1,14 @@
 version: 2.1
 
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+
 jobs:
   build:
     working_directory: ~/repo
@@ -39,10 +48,3 @@ jobs:
       - run:
           name: Run tests
           command: make test
-
-workflows:
-  version: 2.1
-  build_and_test:
-    jobs:
-      - build
-      - test
