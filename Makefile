@@ -2,6 +2,8 @@ build:
 	go build -o cmd/ cmd/main.go
 install:
 	go install
+dependecy:
+	go get ./...
 clean:
 	go clean
 test:
