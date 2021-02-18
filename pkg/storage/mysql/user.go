@@ -8,7 +8,7 @@ import (
 func (s *dbRepository) GetUser(id string) (entity.User, error) {
 	user := entity.User{}
 	result := s.db.Preload("Accounts").Preload("Accounts.AccountType").Find(&user, id)
-	if result.Error != nil {
+	if result.Error != nil || user.ID == 0 {
 		return user, result.Error
 	}
 	return user, nil

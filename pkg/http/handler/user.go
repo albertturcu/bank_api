@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -39,7 +38,7 @@ func (h *appHandler) GetUser() func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		user, err := h.s.GetUser(id)
 		if err != nil {
-			RespondWithError(w, 404, errors.New("the requested user does not exist"))
+			RespondWithError(w, 404, err)
 			return
 		}
 		RespondWithJSON(w, 200, user)
@@ -98,14 +97,12 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 		valid := expectedUser.CheckPassword(payload.Password)
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			RespondWithError(w, 400, errors.New("Email not found"))
+			RespondWithError(w, 400, err)
 			return
 		}
 
 		if valid != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			RespondWithError(w, 400, errors.New("Incorrect Password"))
+			RespondWithError(w, 400, valid)
 			return
 		}
 
