@@ -43,21 +43,33 @@ func TestAddUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	assert := assert.New(t)
+	type TestCase struct {
+		ID    string
+		User  entity.User
+		Error error
+	}
+
 	testUser := entity.User{}
 	err := faker.FakeData(&testUser)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 	id := strconv.FormatUint(uint64(testUser.ID), 10)
-	mockDBRepository.
-		On("GetUser", id).Return(testUser, nil)
 
-	actualUser, err := mockDService.GetUser(id)
-
-	if err != nil {
-		t.Errorf("%v", err)
+	testCases := map[string]TestCase{
+		"zeroValue":     {ID: "0", User: entity.User{}, Error: nil},
+		"success":       {ID: id, User: testUser, Error: nil},
+		"negativeValue": {ID: "-32", User: entity.User{}, Error: nil},
 	}
 
-	assert.Equal(actualUser, testUser)
+	for name, tc := range testCases {
+		mockDBRepository.On("GetUser", tc.ID).Return(tc.User, tc.Error)
+		output, err := mockDService.GetUser(tc.ID)
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+		if !assert.Equal(t, output, tc.User) {
+			t.Fatalf("%s: expected: %v, got: %v", name, tc.ID, tc.User)
+		}
+	}
 }
