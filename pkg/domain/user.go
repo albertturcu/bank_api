@@ -5,25 +5,25 @@ import (
 )
 
 func (s *dService) AddUser(user entity.User) (entity.User, error) {
-	return s.r.AddUser(user)
+	return s.mr.AddUser(user)
 }
 
 func (s *dService) GetUser(id string) (entity.User, error) {
-	return s.r.GetUser(id)
+	return s.mr.GetUser(id)
 }
 
 func (s *dService) GetUsers() ([]entity.User, error) {
-	return s.r.GetUsers()
+	return s.mr.GetUsers()
 }
 
 func (s *dService) UpdateUser(user entity.User) error {
-	return s.r.UpdateUser(user)
+	return s.mr.UpdateUser(user)
 }
 
 func (s *dService) DeleteUser(id string) error {
-	return s.r.DeleteUser(id)
+	return s.mr.DeleteUser(id)
 }
 
 func (s *dService) GetUserByEmail(email string) (entity.User, error) {
-	return s.r.GetUserByEmail(email)
+	return s.mr.GetUserByEmail(email)
 }

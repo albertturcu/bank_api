@@ -7,6 +7,7 @@ type AppHandler interface {
 	UserHandler
 	AccountHandler
 	AccountTypeHandler
+	TokenHandler
 }
 
 type appHandler struct {

@@ -9,32 +9,40 @@ import (
 
 // JwtWrapper wraps the signing key and the issuer
 type JwtWrapper struct {
-	SecretKey       string
-	Issuer          string
-	ExpirationHours int64
+	SecretKey              string
+	Issuer                 string
+	AccessExpirationHours  int64
+	RefreshExpirationHours int64
 }
 
-// JwtClaim adds email as a claim to the token
-type JwtClaim struct {
+// JwtAccessClaim adds email as a claim to the token
+type JwtAccessClaim struct {
+	ID    uint
 	Email string
 	jwt.StandardClaims
 }
 
+//JwtRefreshClaim ...
+type JwtRefreshClaim struct {
+	ID uint
+	jwt.StandardClaims
+}
+
 //ValidateJWT ...
-func (j *JwtWrapper) ValidateJWT(signedToken string) (*JwtClaim, error) {
+func (j *JwtWrapper) ValidateJWT(signedToken string) (*JwtAccessClaim, error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
-		&JwtClaim{},
+		&JwtAccessClaim{},
 		func(token *jwt.Token) (interface{}, error) {
 			return []byte(j.SecretKey), nil
 		},
 	)
 
 	if err != nil {
-		return &JwtClaim{}, err
+		return &JwtAccessClaim{}, err
 	}
 
-	claims, ok := token.Claims.(*JwtClaim)
+	claims, ok := token.Claims.(*JwtAccessClaim)
 
 	if !ok {
 		err = errors.New("Couldn't parse claims")
@@ -50,23 +58,41 @@ func (j *JwtWrapper) ValidateJWT(signedToken string) (*JwtClaim, error) {
 
 }
 
-//GenerateJWT ...
-func (j *JwtWrapper) GenerateJWT(email string) (string, error) {
-	// Do stuff here
-	claims := &JwtClaim{
+//GenerateTokenPair ...
+func (j *JwtWrapper) GenerateTokenPair(email string, uid uint) (map[string]string, error) {
+	accessClaims := &JwtAccessClaim{
 		Email: email,
+		ID:    uid,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.AccessExpirationHours)).Unix(),
+			Issuer:    j.Issuer,
+		},
+	}
+	refreshClaims := &JwtRefreshClaim{
+		ID: uid,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.RefreshExpirationHours)).Unix(),
 			Issuer:    j.Issuer,
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), claims)
+	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), accessClaims)
 
-	signedToken, err := token.SignedString([]byte(j.SecretKey))
+	signedAccessToken, err := accessToken.SignedString([]byte(j.SecretKey))
 
 	if err != nil {
-		return signedToken, err
+		return nil, err
 	}
-	return signedToken, err
+
+	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), refreshClaims)
+
+	signedRefreshToken, err := refreshToken.SignedString([]byte(j.SecretKey))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"access_token":  signedAccessToken,
+		"refresh_token": signedRefreshToken}, err
 }

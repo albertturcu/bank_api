@@ -1,5 +1,5 @@
 build:
-	go build -o cmd/ cmd/main.go
+	go build -o cmd/api cmd/api/main.go
 install:
 	go install
 dependency:
@@ -9,4 +9,4 @@ clean:
 test:
 	go test -v -cover ./pkg/...
 run:
-	go run cmd/main.go
+	go run cmd/api/main.go

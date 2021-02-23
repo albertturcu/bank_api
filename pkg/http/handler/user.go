@@ -7,6 +7,8 @@ import (
 	"os"
 	"restAPI/pkg/domain/authentication"
 	"restAPI/pkg/storage/mysql/entity"
+	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -107,21 +109,29 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		jwtWrapper := authentication.JwtWrapper{
-			SecretKey:       os.Getenv("SECRET_KEY"),
-			Issuer:          "AuthService",
-			ExpirationHours: 24,
+			SecretKey:              os.Getenv("SECRET_KEY"),
+			Issuer:                 "AuthService",
+			AccessExpirationHours:  3,
+			RefreshExpirationHours: 72,
 		}
 
-		signedToken, err := jwtWrapper.GenerateJWT(payload.Email)
+		signedTokenPair, err := jwtWrapper.GenerateTokenPair(payload.Email, expectedUser.ID)
 		if err != nil {
 			fmt.Println(err)
 			RespondWithError(w, 400, err)
+			return
 		}
 
 		loginRespone := LoginResponse{
 			Email: payload.Email,
-			Token: signedToken,
+			Token: signedTokenPair["access_token"],
 		}
+		ok := h.s.SetRefreshToken(strconv.FormatUint(uint64(expectedUser.ID), 10), signedTokenPair["refresh_token"], time.Duration(72*time.Hour))
+		if ok != nil {
+			RespondWithError(w, 400, err)
+			return
+		}
+
 		RespondWithJSON(w, 200, loginRespone)
 	}
 }

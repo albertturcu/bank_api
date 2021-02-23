@@ -16,7 +16,7 @@ var mockDService DService
 
 func TestMain(m *testing.M) {
 	mockDBRepository = &mocks.DBRepository{}
-	mockDService = &dService{r: mockDBRepository}
+	mockDService = &dService{mr: mockDBRepository}
 	os.Exit(m.Run())
 }
 

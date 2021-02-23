@@ -12,7 +12,7 @@ func NewRouter(h handler.AppHandler) *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/login", h.Login()).Methods("POST")
 	r.HandleFunc("/register", h.AddUser()).Methods("POST")
-
+	r.HandleFunc("/refreshToken", h.RefreshToken()).Methods("GET")
 	userRouter := r.PathPrefix("/user").Subrouter()
 	userRouter.Use(middleware.ValidateRequest)
 
@@ -23,6 +23,7 @@ func NewRouter(h handler.AppHandler) *mux.Router {
 
 	accountRouter := r.PathPrefix("/account").Subrouter()
 	accountRouter.Use(middleware.ValidateRequest)
+
 	accountRouter.HandleFunc("/getAllAccounts", h.GetAllAccounts()).Methods("GET")
 	accountRouter.HandleFunc("/createAccount", h.CreateAccount()).Methods("POST")
 	accountRouter.HandleFunc("/withdrawMoney", h.WithdrawMoney()).Methods("POST")

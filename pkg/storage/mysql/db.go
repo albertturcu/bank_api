@@ -27,14 +27,14 @@ type dbRepository struct {
 func NewRepositories() (DBRepository, error) {
 	connectionString := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_HOST"),
-		os.Getenv("APP_DB_PORT"),
-		os.Getenv("APP_DB_NAME"),
+		os.Getenv("MYSQL_ROOT_USERNAME"),
+		os.Getenv("MYSQL_ROOT_PASSWORD"),
+		os.Getenv("MYSQL_HOST"),
+		os.Getenv("MYSQL_PORT"),
+		os.Getenv("MYSQL_DATABASE"),
 	)
 
-	sqlDB, err := sql.Open("mysql", connectionString)
+	sqlDB, err := sql.Open(os.Getenv("MYSQL_DRIVER"), connectionString)
 	if err != nil {
 		fmt.Println(err)
 	}

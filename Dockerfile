@@ -9,5 +9,5 @@ RUN make build
 #RUN_TIME stage
 FROM alpine:latest AS RUN_TIME
 COPY --from=BUILDER /go/src/app/.env ./
-COPY --from=BUILDER /go/src/app/cmd/main ./
+COPY --from=BUILDER /go/src/app/cmd/api/main ./
 CMD ["./main"]

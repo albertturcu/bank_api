@@ -9,6 +9,7 @@ import (
 	"restAPI/pkg/http/handler"
 	"restAPI/pkg/http/router"
 	"restAPI/pkg/storage/mysql"
+	"restAPI/pkg/storage/redis"
 
 	"github.com/joho/godotenv"
 	_ "gorm.io/driver/mysql"
@@ -29,7 +30,12 @@ func main() {
 		panic(err)
 	}
 
-	s := domain.NewService(mr)
+	rdb, err := redis.NewRepositories()
+	if err != nil {
+		panic(err)
+	}
+
+	s := domain.NewService(mr, rdb)
 	h := handler.NewAppHandler(s)
 	r := router.NewRouter(h)
 
