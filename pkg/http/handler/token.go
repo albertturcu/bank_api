@@ -19,20 +19,7 @@ const contextTokenKey ContextKey = "tokenString"
 
 //TokenHandler ...
 type TokenHandler interface {
-	SetRefreshToken() func(w http.ResponseWriter, r *http.Request)
-	DeleteRefreshToken() func(w http.ResponseWriter, r *http.Request)
 	GetToken() func(w http.ResponseWriter, r *http.Request)
-}
-
-func (h *appHandler) SetRefreshToken() func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		RespondWithJSON(w, 200, "Success")
-	}
-}
-func (h *appHandler) DeleteRefreshToken() func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		RespondWithJSON(w, 200, "Success")
-	}
 }
 
 func (h *appHandler) GetToken() func(w http.ResponseWriter, r *http.Request) {

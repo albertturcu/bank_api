@@ -2,7 +2,7 @@
 FROM golang:1.15 AS BUILDER
 WORKDIR /go/src/app
 COPY . .
-RUN go get -d -v ./...
+RUN make dependency
 ENV CGO_ENABLED=0
 RUN make build
 

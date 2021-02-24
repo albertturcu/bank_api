@@ -3,7 +3,7 @@ build:
 install:
 	go install
 dependency:
-	go get ./...
+	go get -d -v ./...
 clean:
 	go clean
 test:
