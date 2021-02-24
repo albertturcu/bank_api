@@ -1,6 +1,8 @@
 package handler
 
-import "restAPI/pkg/domain"
+import (
+	"restAPI/pkg/domain"
+)
 
 //AppHandler ...
 type AppHandler interface {

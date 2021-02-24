@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 )
 
 //UserHandler ...
@@ -25,8 +26,9 @@ type UserHandler interface {
 
 //LoginResponse ...
 type LoginResponse struct {
-	Email string `json:"Email"`
-	Token string `json:"Auth Bearer"`
+	Email        string `json:"Email"`
+	AccessToken  string `json:"Access Token"`
+	RefreshToken string `json:"Refresh Token"`
 }
 
 //LoginPayload ...
@@ -90,6 +92,16 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload LoginPayload
 
+		jwtWrapper := authentication.JwtWrapper{
+			AccessUUID:              uuid.NewV4().String(),
+			AccessSecretKey:         os.Getenv("ACCESS_SECRET_KEY"),
+			AccessExpirationMinutes: 15,
+			RefreshUUID:             uuid.NewV4().String(),
+			RefreshSecretKey:        os.Getenv("REFRESH_SECRET_KEY"),
+			RefreshExpirationHours:  7 * 24,
+			Issuer:                  "AuthService",
+		}
+
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			RespondWithError(w, 400, err)
@@ -107,26 +119,24 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, 400, valid)
 			return
 		}
-
-		jwtWrapper := authentication.JwtWrapper{
-			SecretKey:              os.Getenv("SECRET_KEY"),
-			Issuer:                 "AuthService",
-			AccessExpirationHours:  3,
-			RefreshExpirationHours: 72,
-		}
-
-		signedTokenPair, err := jwtWrapper.GenerateTokenPair(payload.Email, expectedUser.ID)
+		signedTokenPair, err := jwtWrapper.GenerateTokenPair(expectedUser)
 		if err != nil {
-			fmt.Println(err)
 			RespondWithError(w, 400, err)
 			return
 		}
 
 		loginRespone := LoginResponse{
-			Email: payload.Email,
-			Token: signedTokenPair["access_token"],
+			Email:        payload.Email,
+			AccessToken:  signedTokenPair["access_token"],
+			RefreshToken: signedTokenPair["refresh_token"],
 		}
-		ok := h.s.SetRefreshToken(strconv.FormatUint(uint64(expectedUser.ID), 10), signedTokenPair["refresh_token"], time.Duration(72*time.Hour))
+		ok := h.s.SetToken(jwtWrapper.RefreshUUID, strconv.FormatUint(uint64(expectedUser.ID), 10), time.Duration(jwtWrapper.RefreshExpirationHours)*time.Hour)
+		if ok != nil {
+			RespondWithError(w, 400, err)
+			return
+		}
+
+		ok = h.s.SetToken(jwtWrapper.AccessUUID, strconv.FormatUint(uint64(expectedUser.ID), 10), time.Duration(jwtWrapper.AccessExpirationMinutes)*time.Minute)
 		if ok != nil {
 			RespondWithError(w, 400, err)
 			return

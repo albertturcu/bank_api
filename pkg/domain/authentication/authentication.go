@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"errors"
+	"restAPI/pkg/storage/mysql/entity"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -9,67 +10,92 @@ import (
 
 // JwtWrapper wraps the signing key and the issuer
 type JwtWrapper struct {
-	SecretKey              string
-	Issuer                 string
-	AccessExpirationHours  int64
-	RefreshExpirationHours int64
+	AccessUUID              string
+	AccessSecretKey         string
+	AccessExpirationMinutes int64
+	RefreshUUID             string
+	RefreshSecretKey        string
+	RefreshExpirationHours  int64
+	Issuer                  string
 }
 
 // JwtAccessClaim adds email as a claim to the token
 type JwtAccessClaim struct {
-	ID    uint
-	Email string
+	ID         uint
+	AccessUUID string
+	Email      string
 	jwt.StandardClaims
 }
 
 //JwtRefreshClaim ...
 type JwtRefreshClaim struct {
-	ID uint
+	ID          uint
+	RefreshUUID string
 	jwt.StandardClaims
 }
 
-//ValidateJWT ...
-func (j *JwtWrapper) ValidateJWT(signedToken string) (*JwtAccessClaim, error) {
+//ValidateAccessJWT ...
+func (j *JwtWrapper) ValidateAccessJWT(signedToken string) (*JwtAccessClaim, error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JwtAccessClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(j.SecretKey), nil
+			return []byte(j.AccessSecretKey), nil
 		},
 	)
-
 	if err != nil {
 		return &JwtAccessClaim{}, err
 	}
-
 	claims, ok := token.Claims.(*JwtAccessClaim)
-
 	if !ok {
 		err = errors.New("Couldn't parse claims")
 		return claims, err
 	}
-
 	if claims.ExpiresAt < time.Now().Local().Unix() {
 		err = errors.New("JWT is expired")
 		return claims, err
 	}
-
 	return claims, nil
+}
 
+//ValidateRefreshJWT ...
+func (j *JwtWrapper) ValidateRefreshJWT(signedToken string) (*JwtRefreshClaim, error) {
+	token, err := jwt.ParseWithClaims(
+		signedToken,
+		&JwtRefreshClaim{},
+		func(token *jwt.Token) (interface{}, error) {
+			return []byte(j.RefreshSecretKey), nil
+		},
+	)
+	if err != nil {
+		return &JwtRefreshClaim{}, err
+	}
+	claims, ok := token.Claims.(*JwtRefreshClaim)
+	if !ok {
+		err = errors.New("Couldn't parse claims")
+		return claims, err
+	}
+	if claims.ExpiresAt < time.Now().Local().Unix() {
+		err = errors.New("JWT is expired")
+		return claims, err
+	}
+	return claims, nil
 }
 
 //GenerateTokenPair ...
-func (j *JwtWrapper) GenerateTokenPair(email string, uid uint) (map[string]string, error) {
+func (j *JwtWrapper) GenerateTokenPair(user entity.User) (map[string]string, error) {
 	accessClaims := &JwtAccessClaim{
-		Email: email,
-		ID:    uid,
+		ID:         user.ID,
+		AccessUUID: j.AccessUUID,
+		Email:      user.Email,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.AccessExpirationHours)).Unix(),
+			ExpiresAt: time.Now().Local().Add(time.Minute * time.Duration(j.AccessExpirationMinutes)).Unix(),
 			Issuer:    j.Issuer,
 		},
 	}
 	refreshClaims := &JwtRefreshClaim{
-		ID: uid,
+		ID:          user.ID,
+		RefreshUUID: j.RefreshUUID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.RefreshExpirationHours)).Unix(),
 			Issuer:    j.Issuer,
@@ -77,16 +103,14 @@ func (j *JwtWrapper) GenerateTokenPair(email string, uid uint) (map[string]strin
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), accessClaims)
-
-	signedAccessToken, err := accessToken.SignedString([]byte(j.SecretKey))
+	signedAccessToken, err := accessToken.SignedString([]byte(j.AccessSecretKey))
 
 	if err != nil {
 		return nil, err
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), refreshClaims)
-
-	signedRefreshToken, err := refreshToken.SignedString([]byte(j.SecretKey))
+	signedRefreshToken, err := refreshToken.SignedString([]byte(j.RefreshSecretKey))
 
 	if err != nil {
 		return nil, err

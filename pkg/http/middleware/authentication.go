@@ -1,8 +1,8 @@
 package middleware
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"restAPI/pkg/domain/authentication"
@@ -10,9 +10,39 @@ import (
 	"strings"
 )
 
+//ContextKey ...
+type ContextKey string
+
+const contextTokenKey ContextKey = "tokenString"
+
 //ValidateRequest ...
 func ValidateRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		jwtWrapper := authentication.JwtWrapper{
+			AccessSecretKey: os.Getenv("ACCESS_SECRET_KEY"),
+			Issuer:          "AuthService",
+		}
+		token := r.Context().Value(contextTokenKey)
+		tokenString, ok := token.(string)
+		if !ok {
+			handler.RespondWithError(w, 401, errors.New("Invalid token type"))
+			return
+		}
+
+		_, err := jwtWrapper.ValidateAccessJWT(tokenString)
+
+		if err != nil {
+			handler.RespondWithError(w, 401, err)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+//ExtractToken ...
+func ExtractToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var ctx context.Context
 		accessToken := r.Header.Get("Authorization")
 		if accessToken == "" {
 			handler.RespondWithError(w, 403, errors.New("No authorizatin header provided"))
@@ -23,25 +53,12 @@ func ValidateRequest(next http.Handler) http.Handler {
 
 		if len(extractedToken) == 2 {
 			accessToken = strings.TrimSpace(extractedToken[1])
+			ctx = context.WithValue(r.Context(), contextTokenKey, accessToken)
 		} else {
 			handler.RespondWithError(w, 400, errors.New("Incorrect Format of Authorization Token"))
 			return
 		}
 
-		jwtWrapper := authentication.JwtWrapper{
-			SecretKey: os.Getenv("SECRET_KEY"),
-			Issuer:    "AuthService",
-		}
-
-		accessClaims, err := jwtWrapper.ValidateJWT(accessToken)
-		fmt.Println(accessClaims)
-		if err != nil {
-			// validate refresh token from redis
-			// use refresh token to generateTokenPair if it's valid
-			// throw error and request the user a new login flow if it's invalid
-			// handler.RespondWithError(w, 401, err)
-			return
-		}
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

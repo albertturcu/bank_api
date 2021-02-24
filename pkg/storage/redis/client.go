@@ -11,7 +11,7 @@ import (
 
 //RdbRepository ...
 type RdbRepository interface {
-	repository.RefreshToken
+	repository.Token
 }
 
 type rdbRepository struct {
