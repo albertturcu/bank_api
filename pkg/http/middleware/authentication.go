@@ -5,10 +5,26 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"restAPI/pkg/domain"
 	"restAPI/pkg/domain/authentication"
 	"restAPI/pkg/http/handler"
 	"strings"
 )
+
+//Middleware ...
+type Middleware interface {
+	ValidateRequest(next http.Handler) http.Handler
+	ExtractToken(next http.Handler) http.Handler
+}
+
+type middleware struct {
+	s domain.DService
+}
+
+//NewMiddleware ...
+func NewMiddleware(s domain.DService) Middleware {
+	return &middleware{s: s}
+}
 
 //ContextKey ...
 type ContextKey string
@@ -16,7 +32,7 @@ type ContextKey string
 const contextTokenKey ContextKey = "tokenString"
 
 //ValidateRequest ...
-func ValidateRequest(next http.Handler) http.Handler {
+func (m *middleware) ValidateRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jwtWrapper := authentication.JwtWrapper{
 			AccessSecretKey: os.Getenv("ACCESS_SECRET_KEY"),
@@ -29,10 +45,15 @@ func ValidateRequest(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err := jwtWrapper.ValidateAccessJWT(tokenString)
+		tokenClaims, err := jwtWrapper.ValidateAccessJWT(tokenString)
 
 		if err != nil {
 			handler.RespondWithError(w, 401, err)
+			return
+		}
+
+		if _, ok := m.s.GetToken(tokenClaims.AccessUUID); ok != nil {
+			handler.RespondWithError(w, 401, ok)
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -40,7 +61,7 @@ func ValidateRequest(next http.Handler) http.Handler {
 }
 
 //ExtractToken ...
-func ExtractToken(next http.Handler) http.Handler {
+func (m *middleware) ExtractToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var ctx context.Context
 		accessToken := r.Header.Get("Authorization")

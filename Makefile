@@ -8,5 +8,7 @@ clean:
 	go clean
 test:
 	go test -v -cover ./pkg/...
-run:
+api:
 	go run cmd/api/main.go
+web:
+	go run cmd/web/main.go

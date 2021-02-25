@@ -7,6 +7,7 @@ import (
 	"os"
 	"restAPI/pkg/domain"
 	"restAPI/pkg/http/handler"
+	"restAPI/pkg/http/middleware"
 	"restAPI/pkg/http/router"
 	"restAPI/pkg/storage/mysql"
 	"restAPI/pkg/storage/redis"
@@ -36,8 +37,9 @@ func main() {
 	}
 
 	s := domain.NewService(mr, rdb)
+	m := middleware.NewMiddleware(s)
 	h := handler.NewAppHandler(s)
-	r := router.NewRouter(h)
+	r := router.NewRouter(h, m)
 
 	fmt.Printf("Server is running on port %s...\n", os.Getenv("APP_PORT"))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("APP_PORT"), r))
