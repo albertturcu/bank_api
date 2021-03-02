@@ -2,34 +2,56 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    build:
+      context: ./
+      dockerfile: Dockerfile-web
     image: web:v1.0
     restart: on-failure
     container_name: web_app
     depends_on:
-      - mysql_db
-      - redis_db
+      - mysqldb
+      - redisdb
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    links:
+      - mysqldb
+      - redisdb
+    volumes:
+      - .:/code
+  server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: server:v1.0
+    restart: on-failure
+    container_name: server_app
+    depends_on:
+      - mysqldb
+      - redisdb
     ports:
       - "8080:8080"
     env_file:
       - .env
     links:
-      - mysql_db
+      - mysqldb
+      - redisdb
     volumes:
       - .:/code
-  mysql_db:
+  mysqldb:
     image: mysql
     restart: always
-    container_name: mysql_db
+    container_name: mysqldb
     env_file:
       - .env
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
       - "3307:3306"
-  redis_db:
+  redisdb:
     image: bitnami/redis
-    container_name: redis_db
+    container_name: redisdb
     env_file:
       - .env
     ports:

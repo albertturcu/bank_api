@@ -23,7 +23,7 @@ func NewRepositories() (RdbRepository, error) {
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	log.Printf("Connecting to Redis\n")
+	log.Printf("PING, Connecting to Redis\n")
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", redisHost, redisPort),
 		Password: "",

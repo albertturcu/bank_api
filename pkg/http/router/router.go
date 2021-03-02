@@ -16,7 +16,7 @@ func NewRouter(h handler.AppHandler, m middleware.Middleware) *mux.Router {
 	r.HandleFunc("/refreshToken", h.GetToken()).Methods("GET")
 
 	userRouter := r.PathPrefix("/user").Subrouter()
-	// userRouter.Use(m.ExtractToken, m.ValidateRequest)
+	userRouter.Use(m.ExtractToken, m.ValidateRequest)
 
 	userRouter.HandleFunc("/getOne/{id}", h.GetUser()).Methods("GET")
 	userRouter.HandleFunc("/getAll", h.GetUsers()).Methods("GET")
@@ -24,7 +24,7 @@ func NewRouter(h handler.AppHandler, m middleware.Middleware) *mux.Router {
 	userRouter.HandleFunc("/updateOne/{id}", h.UpdateUser()).Methods("PUT")
 
 	accountRouter := r.PathPrefix("/account").Subrouter()
-	// accountRouter.Use(m.ExtractToken, m.ValidateRequest)
+	accountRouter.Use(m.ExtractToken, m.ValidateRequest)
 
 	accountRouter.HandleFunc("/getAllAccounts", h.GetAllAccounts()).Methods("GET")
 	accountRouter.HandleFunc("/createAccount", h.CreateAccount()).Methods("POST")
