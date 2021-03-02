@@ -4,10 +4,10 @@ WORKDIR /go/src/app
 COPY . .
 RUN make dependency
 ENV CGO_ENABLED=0
-RUN make build
+RUN make buildServer
 
 #RUN_TIME stage
 FROM alpine:latest AS RUN_TIME
 COPY --from=BUILDER /go/src/app/.env ./
-COPY --from=BUILDER /go/src/app/cmd/api/main ./
+COPY --from=BUILDER /go/src/app/cmd/server/main ./
 CMD ["./main"]

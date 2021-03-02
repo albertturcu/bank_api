@@ -124,7 +124,6 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, 400, err)
 			return
 		}
-
 		loginRespone := LoginResponse{
 			Email:        payload.Email,
 			AccessToken:  signedTokenPair["access_token"],
@@ -141,7 +140,6 @@ func (h *appHandler) Login() func(w http.ResponseWriter, r *http.Request) {
 			RespondWithError(w, 400, err)
 			return
 		}
-
 		RespondWithJSON(w, 200, loginRespone)
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"restAPI/pkg/storage/redis"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	_ "gorm.io/driver/mysql"
 )
 
@@ -25,6 +26,12 @@ func init() {
 }
 
 func main() {
+	c := cors.New(cors.Options{
+		AllowedHeaders:   []string{"X-Requested-With", "Content-Type", "Authorization"},
+		AllowedMethods:   []string{"GET", "HEAD", "POST", "PUT", "OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:8081"},
+		AllowCredentials: true,
+	})
 
 	mr, err := mysql.NewRepositories()
 	if err != nil {
@@ -42,5 +49,5 @@ func main() {
 	r := router.NewRouter(h, m)
 
 	fmt.Printf("Server is running on port %s...\n", os.Getenv("APP_PORT"))
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("APP_PORT"), r))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("APP_PORT"), c.Handler(r)))
 }

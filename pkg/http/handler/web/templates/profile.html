@@ -1,0 +1,8 @@
+<h1>Profile</h1>
+<p>Name: {{.Name}}</p>
+<p>{{range .Accounts}}
+        AccountNumber: {{.AccountNumber}}<br/>
+        AccountType: {{.AccountType.Type}}<br/>
+        Balance: {{.Balance}} dkk<br/><br/>
+    {{end}}
+</p>

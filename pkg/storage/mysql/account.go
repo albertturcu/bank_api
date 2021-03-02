@@ -1,8 +1,13 @@
 package mysql
 
-import "restAPI/pkg/storage/mysql/entity"
+import (
+	"fmt"
+	"restAPI/pkg/storage/mysql/entity"
+)
 
 func (s *dbRepository) CreateAccount(account entity.Account) (entity.Account, error) {
+	fmt.Printf("%+v", account)
+
 	result := s.db.Create(&account)
 	if result.Error != nil {
 		return entity.Account{}, result.Error

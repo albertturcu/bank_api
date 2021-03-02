@@ -1,5 +1,7 @@
-build:
-	go build -o cmd/api cmd/api/main.go
+buildServer:
+	go build -o cmd/server cmd/server/main.go
+buildWeb:
+	go build -o cmd/web cmd/web/main.go
 install:
 	go install
 dependency:
@@ -8,7 +10,7 @@ clean:
 	go clean
 test:
 	go test -v -cover ./pkg/...
-api:
-	go run cmd/api/main.go
+server:
+	nodemon --exec  go run cmd/server/main.go --signal SIGTERM
 web:
-	go run cmd/web/main.go
+	nodemon --exec go run cmd/web/main.go --signal SIGTERM

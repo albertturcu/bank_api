@@ -1,0 +1,38 @@
+<!-- <script src="/Users/albert-madalinturcu/Projects/Go Tutorial/RESTProject/pkg/http/handler/web/templates/javascript/script.js"></script> -->
+<h1>Login</h1>
+<form id="loginForm">
+    <input id="email" name="email" placeholder="Enter your email" autofocus>
+    <p class="form-field-err"></p>
+    <input id="password" name="password" type="password" placeholder="Enter your password">
+    <p class="form-field-err"></p>
+    <button>Login</button>
+</form>
+
+<script>
+    let loginForm = document.querySelector("#loginForm")
+    loginForm.addEventListener("submit", function(e){
+        e.preventDefault();
+        login();
+    });
+
+    async function login() {
+        data = {
+            "Email": document.querySelector("#email").value,
+            "Password": document.querySelector("#password").value
+        }
+        response = await fetch('http://localhost:8080/login', {
+            method: 'POST',
+            credentials: 'include',
+            body: JSON.stringify(data)
+        })
+
+        if (response.ok) {
+            let json = await response.json()
+            console.log(json)
+            localStorage.setItem('AccessToken',json['Access Token'])
+            window.location.href = "http://localhost:8081/profile";
+        } else {
+            alert("HTTP-Error: " + response.status)
+        }
+    };
+</script>

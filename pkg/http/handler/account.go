@@ -35,7 +35,6 @@ func (h *appHandler) CreateAccount() func(w http.ResponseWriter, r *http.Request
 		var account entity.Account
 		json.NewDecoder(r.Body).Decode(&account)
 		res, err := h.s.CreateAccount(account)
-
 		if err != nil {
 			RespondWithError(w, 400, err)
 			return
