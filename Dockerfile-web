@@ -9,5 +9,6 @@ RUN make buildWeb
 #RUN_TIME stage
 FROM alpine:latest AS RUN_TIME
 COPY --from=BUILDER /go/src/app/.env ./
+COPY --from=BUILDER /go/src/app/pkg/http/handler/web/templates ./templates
 COPY --from=BUILDER /go/src/app/cmd/web/main ./
 CMD ["./main"]

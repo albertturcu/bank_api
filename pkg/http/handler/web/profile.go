@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 )
 
 //ProfileHandler ...
@@ -13,6 +14,12 @@ func (web *web) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("err")
 	}
-	tmpl := template.Must(template.ParseFiles("./pkg/http/handler/web/templates/profile.html"))
+
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("err")
+	}
+
+	tmpl := template.Must(template.ParseFiles(wd + os.Getenv("TEMPLATES_PATH_DOCKER") + "/profile.html"))
 	tmpl.Execute(w, user)
 }
