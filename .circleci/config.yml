@@ -28,7 +28,7 @@ jobs:
             - "/go/pkg/mod"
       - run:
           name: Run build
-          command: make build
+          command: make buildServer
   test:
     working_directory: ~/repo
     docker:
